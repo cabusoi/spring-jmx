@@ -9,10 +9,10 @@ import org.springframework.jmx.export.MBeanExporter;
 @Configuration
 @ComponentScan
 @EnableMBeanExport
+// @EnableAspectJAutoProxy
 public class PersonConfiguration {
 	@Autowired
 	private void configureExporter(MBeanExporter exporter) {
 		exporter.addExcludedBean(Person.NAME);
 	}
-
 }

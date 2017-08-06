@@ -2,14 +2,18 @@ package other;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.spy;
+
+import java.util.Set;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.jmx.support.JmxUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -22,19 +26,25 @@ public class PersonIT {
 
 	@Test
 	public void test() {
-		Person p = context.getBean(Person.class, 40, "donald duck");
-		Person p2 = context.getBean(Person.class, 40, "mickey mouse");
-		Person p3 = context.getBean(Person.class, 40, "minnie");
+		Person p = newPerson(40, "donald duck");
+		Person p2 = newPerson(40, "mickey mouse");
+		Person p3 = newPerson(40, "minnie");
 
-		Person ps = spy(p);
+		Person ps = p;// spy(p);
 
-		doNothing().when(ps).setAge((Integer) anyObject());
-		ps.setName("woody woodpecker");
-		ps.setAge(50);
+		MBeanServer server = JmxUtils.locateMBeanServer();
+		Set<ObjectName> queryNames = server.queryNames(p.getObjectName(), null);
+		System.out.println(queryNames);
+		Set<ObjectInstance> mBeans = server.queryMBeans(p.getObjectName(), null);
+		assertThat(mBeans.size(), is(1));
+		ObjectInstance objectInstance = (ObjectInstance) mBeans.toArray()[0];
+		assertThat(objectInstance.getClassName(), is(Person.class.getName()));
+		assertThat(objectInstance.getObjectName(), is(p.getObjectName()));
 
-		assertThat(ps.name, is("woody woodpecker"));
-		assertThat(ps.age, is(40));
+	}
 
+	public Person newPerson(int age, String name) {
+		return context.getBean(Person.class, age, name);
 	}
 
 }

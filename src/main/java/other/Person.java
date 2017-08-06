@@ -29,12 +29,17 @@ public class Person {
 	}
 
 	@Autowired
-	MBeanExporter exporter;
+	@Logged
+	public void register(MBeanExporter exporter) throws MBeanExportException, MalformedObjectNameException {
+		exporter.registerManagedResource(this, getObjectName());
+	}
 
-	@javax.annotation.PostConstruct
-	private void setup() throws MBeanExportException, MalformedObjectNameException {
-		exporter.registerManagedResource(this,
-				new ObjectName(this.getClass().getPackage().getName() + ":type=" + NAME + ",name=" + this.name));
+	public ObjectName getObjectName() {
+		try {
+			return new ObjectName(this.getClass().getPackage().getName() + ":type=" + NAME + ",name=" + this.name);
+		} catch (MalformedObjectNameException ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 
 	protected synchronized int getAge() {
